@@ -44,7 +44,10 @@ global.WEIXIN_APP_ID = "";
 global.WEIXIN_APP_SECRET = "";
 global.WEIXIN_TOKEN = "";
 
-// sns: facebook
+// sns : facebook
+
+// external : python path
+global.PYTHON_PATH = "";
 
 // generic server configuration
 global.SERVER_LISTEN_PORT = "8080";

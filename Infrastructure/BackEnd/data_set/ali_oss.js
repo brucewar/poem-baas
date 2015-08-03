@@ -28,12 +28,15 @@ var OSS = function(_host, _port, _accessKey, _accessSecret) {
 
 OSS.prototype.saveObjectFromBinary = function(objectID, bufferContent, bucketName, contentType, callback) {
     var randomID = stringUtils.randomChar(16);
-    objectID = objectID || (null != contentType &&
+    console.log("object ID = " + objectID);
+    if(null == objectID || undefined == objectID) {
+        objectID = objectID || (null != contentType &&
         '' != contentType &&
         contentType.indexOf("/") >= 0) ?
         randomID + '.' + contentType.substr(contentType.lastIndexOf('/') + 1) :
-        randomID;
-    logger.debug("save to bucket = " + bucketName);
+            randomID;
+    }
+    logger.debug("save object " + objectID + " to bucket " + bucketName);
     this.ossClient.putObject({
         bucket: bucketName,
         object: objectID,
