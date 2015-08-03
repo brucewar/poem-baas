@@ -5,13 +5,16 @@
 
 // global constants describes the ability sets of the POEM framework
 
-global.VERSION = "1.0.1";
-global.ICODE = "PoEM~ V0.1";
+global.VERSION = "0.0.2";
+global.ICODE = "PoEM~ V0.2";
 
 // runtime environment
 global.ENV = "dev";
 global.SERVER = 0;
 global.LISTEN_PORT = "80";
+
+// local environment
+global.FILE_TEMP_PATH = "";
 
 // db : MySQL
 global.MYSQL_DB_SERVER_ADDRESS = "127.0.0.1";
