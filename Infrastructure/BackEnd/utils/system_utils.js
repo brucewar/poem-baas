@@ -13,7 +13,7 @@ function startup(expressApp, port, serverName) {
 
         console.log(serverName +' restful webservice server is listening at port : ' +
         port + " //" +  dateUtils.formatDate(new Date(), "yyyy-MM-dd hh:mm:ss"));
-        console.log("driven by " + ICODE + " <(￣︶￣)>");
+        console.log("driven by " + ICODE);
     }
 }
 
