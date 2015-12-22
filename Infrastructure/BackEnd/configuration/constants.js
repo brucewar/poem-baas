@@ -56,4 +56,8 @@ global.PYTHON_PATH = "";
 global.SERVER_LISTEN_PORT = "8080";
 global.SERVER_ADDRESS = "127.0.0.1";
 
+// incoming request security configuration
+global.APP_ID = "";
+global.APP_TOKEN = "";
+
 global.TOKEN_TTL = 60;

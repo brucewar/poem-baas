@@ -3,7 +3,7 @@
  * 2014-08-31
  */
 
-function MD5(sMessage) {
+function MD5(sMessage, fullSize) {
     function RotateLeft(lValue, iShiftBits) {
         return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
     }
@@ -180,7 +180,12 @@ function MD5(sMessage) {
         d = AddUnsigned(d, DD);
     }
 // Step 5. Output the 128 bit digest
-    var temp = WordToHex(a) + WordToHex(b) + WordToHex(c);
+    var temp;
+    if (undefined != fullSize && null != fullSize) {
+        temp = WordToHex(a) + WordToHex(b) + WordToHex(c) + WordToHex(d);
+    } else {
+        temp = WordToHex(a) + WordToHex(b) + WordToHex(c);
+    }
     return temp.toLowerCase();
 }
 

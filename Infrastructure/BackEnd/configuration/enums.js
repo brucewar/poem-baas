@@ -9,6 +9,9 @@ function Enums() {
     this.APP_USERDEBUG_MODE = "userdebug";
 
     this.SERVER_MAIN = 0;
+
+    this.SCHEDULER_PERIODICAL = 0;
+    this.SCHEDULER_ONCE = 1;
 }
 
 module.exports = Enums;
