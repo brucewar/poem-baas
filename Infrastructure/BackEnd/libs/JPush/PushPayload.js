@@ -142,7 +142,7 @@ function android(alert, title, builder_id, extras) {
     return {'android' : android};
 }
 
-function ios(alert, sound, badge, contentAvailable, extras) {
+function ios(alert, sound, badge, contentAvailable, extras, category) {
     if (!alert || typeof alert != 'string') {
         throw new JError.InvalidArgumentError("ios.alert is require and can only be set to the String");
     }
@@ -160,14 +160,11 @@ function ios(alert, sound, badge, contentAvailable, extras) {
     }
 
     if (badge != null) {
-        if (typeof badge != 'number') {
-            throw new JError.InvalidArgumentError("Invalid ios.badge, it can only be set to the Number");
-        }
         if (badge != DISABLE_BADGE) {
             ios['badge'] = badge;
         }
     } else {
-        ios['badge'] = 1;
+        ios['badge'] = '+1';
     }
 
     if (contentAvailable != null) {
@@ -184,6 +181,9 @@ function ios(alert, sound, badge, contentAvailable, extras) {
             throw new JError.InvalidArgumentError("Invalid ios.extras");
         }
         ios['extras'] = extras;
+    }
+    if (category != null) {
+    	ios['category'] = category;
     }
     return {"ios" : ios};
 }
@@ -275,8 +275,8 @@ function generateSendno() {
     return(MIN_SENDNO + Math.round(Math.random() * (MAX_SENDNO - MIN_SENDNO)));
 }
 
-function setOptions(sendno, time_to_live, override_msg_id, apns_production) {
-    if (sendno == null && time_to_live == null && override_msg_id == null && apns_production == null) {
+function setOptions(sendno, time_to_live, override_msg_id, apns_production, big_push_duration) {
+    if (sendno == null && time_to_live == null && override_msg_id == null && apns_production == null && big_push_duration == null) {
         throw new JError.InvalidArgumentError("option's args cannot all be null.");
     }
     var options = {};
@@ -312,6 +312,17 @@ function setOptions(sendno, time_to_live, override_msg_id, apns_production) {
     } else {
         options['apns_production'] = false;
     }
+    
+    if (big_push_duration != null) {
+    	if (typeof big_push_duration !== 'number') {
+    		throw new JError.InvalidArgumentError("Invalid options.big_push_duration, it can only be set to the Number");
+    	}
+    	
+    	if (big_push_duration >1440 || big_push_duration <= 0) {
+    		throw new JError.InvalidArgumentError("Invalid options.big_push_duration, it should bigger than 0 and less than 1440");
+    	}
+      options['big_push_duration'] = big_push_duration;
+    }
 
     this.payload = JUtil.extend(this.payload, {'options' : options});
     return this;
@@ -335,6 +346,11 @@ function send(callback) {
     return this.client.sendPush(body, callback);
 }
 
+function sendValidate(callback) {
+	validate(this.payload);
+	var body = this.toJSON();
+	return this.client.validate(body, callback);
+}
 /**
  * Verify the payload legitimacy, it will call by this.send()
  * @param payload
@@ -369,18 +385,16 @@ function isIosExceedLength() {
         message = this.payload.message;
     var alert = notification.alert ? notification.alert : '';
     ios = calculateLength(JSON.stringify(JUtil.extend({'alert': alert}, notification.ios)));
-    if (ios > 220) {
-        return true;
-    }
 
     if (message != null) {
-        ios += calculateLength(JSON.stringify(message));
+        var msgLen = calculateLength(JSON.stringify(message));
+        return msgLen >= 1000;
     }
-    return ios > 1200;
+    return ios >= 2000;
 }
 
 function isGlobalExceedLength(){
-    var android = 0, winphone = 0, ios = 0;
+    var android = 0, winphone = 0, ios = false;
     var notification = this.payload.notification,
         message = this.payload.message,
         platform = this.payload.platform;
@@ -396,22 +410,21 @@ function isGlobalExceedLength(){
         }
     }
 
+    if (hasIOS) {
+        ios = this.isIosExceedLength();
+    }
+
     if (notification != null) {
         var alert = notification.alert ? notification.alert : '';
-        ios = calculateLength(JSON.stringify(JUtil.extend({'alert': alert}, notification.ios)));
-        if (hasIOS && ios > 220) {
-            return true;
-        }
         winphone = calculateLength(JSON.stringify(JUtil.extend({'alert': alert}, notification.winphone)));
         android = calculateLength(JSON.stringify(JUtil.extend({'alert': alert}, notification.android)));
     }
     if (message != null) {
         var msg_length = calculateLength(JSON.stringify(message));
-        ios += msg_length;
         winphone += msg_length;
         android += msg_length;
     }
-    return ios > 1200 || winphone > 1200 || android > 1200;
+    return ios || winphone > 1000 || android > 1000;
 }
 
 
@@ -427,7 +440,7 @@ PushPayload.prototype.toJSON = toJSON;
 PushPayload.prototype.send = send;
 PushPayload.prototype.isIosExceedLength = isIosExceedLength;
 PushPayload.prototype.isGlobalExceedLength = isGlobalExceedLength;
-
+PushPayload.prototype.sendValidate = sendValidate;
 // ------ private constant define ------
 var VALID_DEVICE_TYPES = ["ios", "android", "winphone"];
 var DISABLE_SOUND = 'DISABLE_SOUND'
