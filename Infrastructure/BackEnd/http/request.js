@@ -15,6 +15,7 @@ var ErrorCode = require('../configuration/error_code.js');
 var errorCode = new ErrorCode();
 
 var logger = require('../logging/logger4js').helper;
+
 /**
  *
  * @param _host : host of service server

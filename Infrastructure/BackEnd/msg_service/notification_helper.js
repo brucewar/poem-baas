@@ -16,11 +16,21 @@ var http = require('http');
 
 var logger = require('../logging/logger4js').helper;
 
-var JPush = require("../libs/JPush/JPush.js");
-var client = JPush.buildClient(JPUSH_APP_KEY, JPUSH_APP_MASTER_SECRET);
-
 var errorCode = new ErrorCode();
 var enums = new Enums();
+
+var JPush = require("../libs/JPush/JPush.js");
+/**
+ *
+ * @param _appKey : APP KEY for push server
+ * @param _port : APP SECRET for push server
+ * @constructor
+ */
+var PushClient = function(_appKey, _appMasterSecret) {
+    this.appKey = _appKey;
+    this.appMasterSecret = _appMasterSecret;
+    this.client = JPush.buildClient(this.appKey, this.appMasterSecret);
+};
 
 // global parameters
 var gMessageTTL = 60 * 10;
@@ -34,9 +44,9 @@ var gMessageTTL = 60 * 10;
  * @param message
  * @param callback
  */
-exports.pushMessageViaJPush = function (conversationID, pushType, deviceTypes,
+PushClient.prototype.pushMessageViaJPush = function (conversationID, pushType, deviceTypes,
                                  message, callback) {
-    logger.debug("converID = " + conversationID + ", pushType = " + pushType + ", deviceType = " + deviceTypes + ", message = " + message);
+    logger.debug("conversationID = " + conversationID + ", pushType = " + pushType + ", deviceType = " + deviceTypes + ", message = " + message);
 
     var devices = null;
     var audience = null;
@@ -65,7 +75,7 @@ exports.pushMessageViaJPush = function (conversationID, pushType, deviceTypes,
 
     logger.debug("devices: " + devices + ", audience: " + audience);
 
-    client.push().setPlatform(devices)
+    this.client.push().setPlatform(devices)
         .setAudience(audience)
         .setMessage(message)
         .setOptions(null, gMessageTTL)
@@ -93,7 +103,7 @@ exports.pushMessageViaJPush = function (conversationID, pushType, deviceTypes,
  * @param callback
  * spec: exception handler needed
  */
-exports.pushViaBaiduChannelAPI = function (conversationID, conversationChannel, deviceType, messageType, pushType,
+PushClient.prototype.pushViaBaiduChannelAPI = function (conversationID, conversationChannel, deviceType, messageType, pushType,
                                            messageTitle, messageDescription, callback) {
     var messageBody = "";
 
@@ -113,10 +123,10 @@ exports.pushViaBaiduChannelAPI = function (conversationID, conversationChannel, 
 
     // prepare parameter map and base URL
     var parameterMap = new Map();
-    var baiduChannelAPIPushMsgURL = BAIDU_CLOUD_CHANNEL_API_PUSH_MSG_URL;
+    var baiduChannelAPIPushMsgURL = "https://api.tuisong.baidu.com/rest/3.0/";
 
     // fill parameters according to BAIDU CHANNEL API Spec
-    parameterMap.put("apikey", BAIDU_CLOUD_API_KEY);
+    parameterMap.put("apikey", this.appKey);
     parameterMap.put("method", "push_msg");
     parameterMap.put("channel_id", conversationChannel);
     parameterMap.put("user_id", conversationID);
@@ -130,12 +140,12 @@ exports.pushViaBaiduChannelAPI = function (conversationID, conversationChannel, 
 
     // sort parameters and sign
     parameterMap.sortByKey('A');
-    var signPlainText = "POSThttp://" + BAIDU_CLOUD_CHANNEL_API_HOST + BAIDU_CLOUD_CHANNEL_API_PUSH_MSG_URL;
+    var signPlainText = "POSThttp://" + "api.tuisong.baidu.com" + "/rest/3.0/";
     var parameterArray = parameterMap.getArray();
     for (var i = 0; i < parameterArray.length; i++) {
         signPlainText += parameterArray[i].key + "=" + parameterArray[i].value;
     }
-    signPlainText += BAIDU_CLOUD_SECRET_KEY;
+    signPlainText += this.appMasterSecret;
     // logger.debug("plain text of sign string = " + signPlainText);
 
     var signText = ciphering.MD5(encodeURIComponent(signPlainText));
@@ -158,8 +168,8 @@ exports.pushViaBaiduChannelAPI = function (conversationID, conversationChannel, 
     });
 
     var androidPushOptions = {
-        host: BAIDU_CLOUD_CHANNEL_API_HOST,
-        port: BAIDU_CLOUD_CHANNEL_API_PORT,
+        host: "api.tuisong.baidu.com",
+        port: "433",
         path: baiduChannelAPIPushMsgURL,
         method: 'POST',
         headers: {
@@ -211,14 +221,14 @@ exports.pushViaAppleAPN = function(deviceToken, expiry, alert, sound, payload, c
             "cert": "./certs/push_cert_production.pem",
             "key": "./certs/push_key_production.pem",
             "gateway": "gateway.sandbox.push.apple.com",
-            "port": APN_PUSH_PORT
+            "port": "2195"
         };
     } else if(enums.APP_DEVELOPMENT_MODE == ENV) {
         options = {
             "cert": "./certs/push_cert_dev.pem",
             "key": "./certs/push_key_dev.pem",
             "gateway": "gateway.sandbox.push.apple.com",
-            "port": APN_PUSH_PORT
+            "port": "2195"
         };
     } else {
         throw "Wrong ENV";
