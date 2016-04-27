@@ -24,7 +24,7 @@ function Enums() {
     this.BC_API_MESSAGE_TYPE_NOTIFICATION = 1;
 
     this.BC_API_PUSH_TYPE_PEER = 0;
-    
+    this.BC_API_PUSH_TYPE_BROADCAST = 1;
 }
 
 module.exports = Enums;

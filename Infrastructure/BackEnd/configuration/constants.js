@@ -52,6 +52,10 @@ global.WEIXIN_TOKEN = "";
 // external : python path
 global.PYTHON_PATH = "";
 
+// message : credential
+global.PUSH_APP_KEY = "";
+global.PUSH_APP_SECRET = "";
+
 // generic server configuration
 global.SERVER_LISTEN_PORT = "8080";
 global.SERVER_ADDRESS = "127.0.0.1";

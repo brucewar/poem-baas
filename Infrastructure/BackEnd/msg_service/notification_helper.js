@@ -214,7 +214,7 @@ PushClient.prototype.pushViaBaiduChannelAPI = function (conversationID, conversa
  * @param callback
  * spec: exception handler needed
  */
-exports.pushViaAppleAPN = function(deviceToken, expiry, alert, sound, payload, callback) {
+PushClient.prototype.pushViaAppleAPN = function(deviceToken, expiry, alert, sound, payload, callback) {
     var options = null;
     if(enums.APP_PRODUCTION_MODE == ENV) {
         option = {
