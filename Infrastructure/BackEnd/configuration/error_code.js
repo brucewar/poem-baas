@@ -14,6 +14,7 @@ function ErrorCode() {
 
     this.WRONG_PUSH_DEVICE = -50;
     this.WRONG_PUSH_TYPE = -51;
+    this.WRONG_PUSH_DESTINATION = -52;
 
     this.SNS_WEIXIN_VALIDATION_SUCCESS = 0;
     this.SNS_WEIXIN_VALIDATION_FAILED = 1;

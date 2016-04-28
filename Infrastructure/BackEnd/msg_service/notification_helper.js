@@ -44,9 +44,9 @@ var gMessageTTL = 60 * 10;
  * @param message
  * @param callback
  */
-PushClient.prototype.pushMessageViaJPush = function (conversationID, pushType, deviceTypes,
+PushClient.prototype.pushMessageViaJPush = function (conversationID, destType, pushType, deviceTypes,
                                  message, callback) {
-    logger.debug("conversationID = " + conversationID + ", pushType = " + pushType + ", deviceType = " + deviceTypes + ", message = " + message);
+    logger.debug("conversationID = " + conversationID + ", destType = " + destType + ", deviceType = " + deviceTypes + ", message = " + message);
 
     var devices = null;
     var audience = null;
@@ -64,31 +64,55 @@ PushClient.prototype.pushMessageViaJPush = function (conversationID, pushType, d
     }
 
     // set audience
-    if(enums.JPUSH_TYPE_BROADCAST == pushType) {
+    if(enums.JPUSH_DEST_TYPE_BROADCAST == destType) {
         audience = JPush.ALL;
-    } else if(enums.JPUSH_TYPE_PEER == pushType) {
+    } else if(enums.JPUSH_DEST_TYPE_PEER == destType) {
         audience = JPush.registration_id(conversationID);
+    } else if(enums.JPUSH_DEST_TYPE_GROUP == destType) {
+        audience = JPush.tag(conversationID);
     } else {
         logger.error("Wrong push audience required");
-        callback(errorCode.WRONG_PUSH_TYPE);
+        callback(errorCode.WRONG_PUSH_DESTINATION);
     }
 
     logger.debug("devices: " + devices + ", audience: " + audience);
 
-    this.client.push().setPlatform(devices)
-        .setAudience(audience)
-        .setMessage(message)
-        .setOptions(null, gMessageTTL)
-        .send(function(err, res) {
-            if (err) {
-                logger.error("failed to send message via JPush, error = " + err.message);
-                callback(errorCode.FAILED);
-            } else {
-                logger.info("succeeded to send message via JPush, sendNo = " + res.sendno +
-                    ", messageID = " + res.msg_id);
-                callback(errorCode.SUCCESS);
-            }
-        });
+    if (enums.JPUSH_PUSH_TYPE_MESSAGE == pushType) {
+        this.client.push().setPlatform(devices)
+            .setAudience(audience)
+            .setMessage(message)
+            .setOptions(null, gMessageTTL)
+            .send(function(err, res) {
+                if (err) {
+                    logger.error("failed to send message via JPush, error = " + err.message);
+                    callback(errorCode.FAILED);
+                } else {
+                    logger.info("succeeded to send message via JPush, sendNo = " + res.sendno +
+                        ", messageID = " + res.msg_id);
+                    callback(errorCode.SUCCESS);
+                }
+            });
+    } else if (enums.JPUSH_PUSH_TYPE_NOTIFICATION == pushType) {
+
+        this.client.push().setPlatform(devices)
+            .setAudience(audience)
+            .setNotification(message)
+            .setOptions(null, gMessageTTL)
+            .send(function(err, res) {
+                if (err) {
+                    logger.error("failed to send message via JPush, error = " + err.message);
+                    callback(errorCode.FAILED);
+                } else {
+                    logger.info("succeeded to send message via JPush, sendNo = " + res.sendno +
+                        ", messageID = " + res.msg_id);
+                    callback(errorCode.SUCCESS);
+                }
+            });
+    } else {
+        logger.error("invalid push type : " + pushType);
+        callback(errorCode.WRONG_PUSH_TYPE);
+    }
+
 };
 
 /**
@@ -249,3 +273,5 @@ PushClient.prototype.pushViaAppleAPN = function(deviceToken, expiry, alert, soun
         callback(option, note, device);
     }
 };
+
+module.exports = PushClient;
