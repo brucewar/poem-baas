@@ -60,6 +60,9 @@ global.PUSH_APP_SECRET = "";
 global.SERVER_LISTEN_PORT = "8080";
 global.SERVER_ADDRESS = "127.0.0.1";
 
+// OSS direct download bucket name
+global.OSS_DIR_DOWN_PATH = "";
+
 // incoming request security configuration
 global.APP_ID = "";
 global.APP_TOKEN = "";
