@@ -82,7 +82,7 @@ PushClient.prototype.pushMessageViaJPush = function (conversationID, destType, p
             .setAudience(audience)
             .setMessage(message)
             .setOptions({
-                apns_production: false
+                apns_production: true
             }, gMessageTTL)
             .send(function(err, res) {
                 if (err) {
@@ -100,7 +100,7 @@ PushClient.prototype.pushMessageViaJPush = function (conversationID, destType, p
             .setAudience(audience)
             .setNotification(message)
             .setOptions({
-                apns_production: false
+                apns_production: true
             }, gMessageTTL)
             .send(function(err, res) {
                 if (err) {
