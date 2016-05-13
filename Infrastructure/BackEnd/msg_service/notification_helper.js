@@ -81,7 +81,9 @@ PushClient.prototype.pushMessageViaJPush = function (conversationID, destType, p
         this.client.push().setPlatform(devices)
             .setAudience(audience)
             .setMessage(message)
-            .setOptions(null, gMessageTTL)
+            .setOptions({
+                apns_production: false
+            }, gMessageTTL)
             .send(function(err, res) {
                 if (err) {
                     logger.error("failed to send message via JPush, error = " + err.message);
@@ -97,7 +99,9 @@ PushClient.prototype.pushMessageViaJPush = function (conversationID, destType, p
         this.client.push().setPlatform(devices)
             .setAudience(audience)
             .setNotification(message)
-            .setOptions(null, gMessageTTL)
+            .setOptions({
+                apns_production: false
+            }, gMessageTTL)
             .send(function(err, res) {
                 if (err) {
                     logger.error("failed to send message via JPush, error = " + err.message);
