@@ -38,24 +38,29 @@ var gMessageTTL = 60 * 10;
 /**
  * Push message via JPUSH
  * @param conversationID
- * @param conversationChannel
  * @param pushType
  * @param deviceTypes
  * @param message
+ * @param sound
+ * @param badge
+ * @param silent
+ * @param title
+ * @param custom
  * @param callback
  */
 PushClient.prototype.pushMessageViaJPush = function (conversationID, destType, pushType, deviceTypes,
-                                 message, callback) {
-    logger.debug("conversationID = " + conversationID + ", destType = " + destType + ", deviceType = " + deviceTypes + ", message = " + message);
+                                 message, sound, badge, silent, title, custom, callback) {
+    logger.debug("conversationID = " + conversationID + ", destType = " + destType + ", deviceType = " + deviceTypes +
+        ", message = " + message);
 
     var devices = null;
     var audience = null;
 
     // set target platform
-    if(enums.JPUSH_DEVICE_TYPE_ANDROID == deviceTypes) {
-        devices = 'android';
-    } else if(enums.JPUSH_DEVICE_TYPE_IOS == deviceTypes) {
+    if(enums.JPUSH_DEVICE_TYPE_IOS == deviceTypes) {
         devices = 'ios';
+    } else if(enums.JPUSH_DEVICE_TYPE_ANDROID == deviceTypes) {
+        devices = 'android';
     } else if(enums.JPUSH_DEVICE_TYPE_BOTH == deviceTypes) {
         devices = JPush.ALL;
     } else {
@@ -93,10 +98,12 @@ PushClient.prototype.pushMessageViaJPush = function (conversationID, destType, p
                 }
             });
     } else if (enums.JPUSH_PUSH_TYPE_NOTIFICATION == pushType) {
-
         this.client.push().setPlatform(devices)
             .setAudience(audience)
-            .setNotification(message)
+            .setNotification(
+                JPush.android(message, title, enums.ANDROID_STYPE_0, custom),
+                JPush.ios(message, sound, badge, silent, custom)
+            )
             .setOptions(null, gMessageTTL, null, true, null)
             .send(function(err, res) {
                 if (err) {
@@ -112,7 +119,6 @@ PushClient.prototype.pushMessageViaJPush = function (conversationID, destType, p
         logger.error("invalid push type : " + pushType);
         callback(errorCode.WRONG_PUSH_TYPE);
     }
-
 };
 
 /**
