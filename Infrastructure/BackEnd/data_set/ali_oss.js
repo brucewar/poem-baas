@@ -3,105 +3,68 @@
  * 2014-08-30
  */
 
-'use strict';
+// 'use strict';
 
 require('../configuration/constants');
 var ErrorCode = require('../configuration/error_code');
 var Enums = require('../configuration/enums');
 
 var stringUtils = require('../utils/string_utils');
-var AliOSS = require('oss-client');
+// deprecated
+// var AliOSS = require('oss-client');
+var AliOSS = require('ali-oss');
+var OssWrapper = require('ali-oss').Wrapper;
 var logger = require('../logging/logger4js').helper;
 
 var errorCode = new ErrorCode();
 var enums = new Enums();
 
-var OSS = function(_host, _port, _accessKey, _accessSecret) {
+var OSS = function(_region, _bucket, _accessKey, _accessSecret) {
     this.option = {
+        region: _region,
+        bucket: _bucket,
         accessKeyId: _accessKey || OSS_APP_ID,
-        accessKeySecret: _accessSecret || OSS_APP_SECRET,
-        host: _host,
-        port: _port
+        accessKeySecret: _accessSecret,
     };
-    this.ossClient = new AliOSS.OssClient(this.option);
-};
+    this.client = new OssWrapper(this.option);
+}
 
-OSS.prototype.saveObjectFromBinary = function(objectID, bufferContent, bucketName, contentType, callback) {
+OSS.prototype.saveObjectFromBinary = function(objectID, bufferContent, contentType, callback) {
     var randomID = stringUtils.randomChar(16);
     console.log("object ID = " + objectID);
-    if(null == objectID || undefined == objectID) {
+    if(null == objectID) {
         objectID = objectID || (null != contentType &&
         '' != contentType &&
         contentType.indexOf("/") >= 0) ?
         randomID + '.' + contentType.substr(contentType.lastIndexOf('/') + 1) :
             randomID;
     }
-    logger.debug("save object " + objectID + " to bucket " + bucketName);
-    this.ossClient.putObject({
-        bucket: bucketName,
-        object: objectID,
-        srcFile: bufferContent,
-        contentType: contentType
-    }, function (saveObjectErr, result) {
-        if(saveObjectErr) {
-            logger.debug("save object error : " + saveObjectErr);
-            callback(errorCode.FAILED, null);
-        } else {
-            logger.debug("save object successfully, result = " + JSON.stringify(result));
-            logger.debug(objectID);
-            callback(errorCode.SUCCESS, objectID);
-        }
+    this.client.put(objectID, bufferContent).then(function (val) {
+        console.log('result: %j', val);
+        callback(errorCode.SUCCESS, objectID);
+    }).catch (function (err) {
+        console.log('error: %j', err);
+        callback(errorCode.FAILED, null);
     });
 };
 
-OSS.prototype.getObjectByID = function(objectID, bucketName, callback) {
-    this.ossClient.listObject({
-        bucket: bucketName,
-        prefix: '',
-        marker: objectID,
-        delimiter: '/',
-        maxKeys: 1
-    }, function (getObjectErr, result) {
-        if(getObjectErr) {
-            logger.debug("get object error : " + getObjectErr);
-            callback(errorCode.FAILED, null);
-        } else {
-            logger.debug("list object successfully, result = " + JSON.stringify(result));
-            callback(errorCode.SUCCESS, result);
-        }
+OSS.prototype.getObjectByID = function(objectID, filePath, callback) {
+    this.client.get(objectID, filePath).then(function (val) {
+        console.log('result: %j', val);
+        callback(errorCode.SUCCESS, filePath);
+    }).catch (function (err) {
+        console.log('error: %j', err);
+        callback(errorCode.FAILED, null);
     });
 };
 
-OSS.prototype.serveObjectByID = function(objectID, bucketName, res, callback) {
-    // pipe the binary stream to res
-    this.ossClient.getObject({
-        bucket: bucketName,
-        object: objectID,
-        dstFile: res,
-        userHeaders: ''
-    }, function (getObjectErr, result) {
-        if(getObjectErr) {
-            callback(errorCode.FAILED, null);
-        } else {
-            callback(errorCode.SUCCESS, res);
-        }
-    });
-};
-
-OSS.prototype.listObjects = function(from, count, bucketName, callback) {
-    this.ossClient.listObject({
-        bucket: bucketName,
-        prefix: '',
-        marker: from,
-        delimiter: '/',
-        maxKeys: count
-    }, function (getObjectErr, result) {
-        if(getObjectErr) {
-            logger.debug("list object error : " + getObjectErr);
-            callback(errorCode.FAILED, null);
-        } else {
-            callback(errorCode.SUCCESS, result);
-        }
+OSS.prototype.serveObjectByID = function(objectID, filePath, callback) {
+    this.client.get(objectID, filePath).then(function (val) {
+        console.log('result: %j', val);
+        callback(errorCode.SUCCESS, filePath);
+    }).catch (function (err) {
+        console.log('error: %j', err);
+        callback(errorCode.FAILED, null);
     });
 };
 
